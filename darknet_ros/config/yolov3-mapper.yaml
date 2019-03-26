@@ -1,7 +1,7 @@
 yolo_model:
 
   config_file:
-    name: yolov3-obj-vis.cfg
+    name: yolov3-mapper.cfg
   weight_file:
     name: yolov3-obj_111000.weights
   threshold:

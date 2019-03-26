@@ -3,12 +3,13 @@
 <launch>
   
   <!-- Use YOLOv3 -->
-  <arg name="network_param_file"         default="$(find darknet_ros)/config/yolov3-obj-vis.yaml"/>
-
+  <arg name="network_param_file"         default="$(find darknet_ros)/config/yolov3-mapper.yaml"/>
+  <arg name="ros_param_file"             default="$(find darknet_ros)/config/ros-uav.yaml"/>
 
   <!-- Include main launch file -->
   <include file="$(find darknet_ros)/launch/darknet_ros.launch">
     <arg name="network_param_file"    value="$(arg network_param_file)"/>
+    <arg name="ros_param_file"    value="$(arg ros_param_file)"/>
   </include>
 
 </launch>
