@@ -1,7 +1,7 @@
 subscribers:
 
   camera_reading:
-    topic: /camera/image_rect_color
+    topic: /uav_camera/image_rect_color
     queue_size: 1
 
 actions:
