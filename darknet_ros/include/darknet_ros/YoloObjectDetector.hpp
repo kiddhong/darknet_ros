@@ -238,7 +238,7 @@ class YoloObjectDetector
                     int frames, int fullscreen);
 
   void yolo();
-  
+
   IplImage* getIplImage();
   // IplImageWithHeader_ getIplImageWithHeader();
 
@@ -247,8 +247,6 @@ class YoloObjectDetector
   bool isNodeRunning(void);
 
   void *publishInThread();
-
-  void show_image_cv(image p, const char *name, IplImage *disp, bool displayDetectedImage);
 };
 
 } /* namespace darknet_ros*/
