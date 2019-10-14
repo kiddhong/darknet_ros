@@ -55,17 +55,17 @@ YoloObjectDetector::~YoloObjectDetector()
 bool YoloObjectDetector::readParameters()
 {
   // Load common parameters.
-  nodeHandle_.param("image_view/enable_opencv", viewImage_, true);
+  nodeHandle_.param("image_view/display_detected_image", displayDetectedImage_, true);
   nodeHandle_.param("image_view/wait_key_delay", waitKeyDelay_, 3);
-  nodeHandle_.param("image_view/enable_console_output", enableConsoleOutput_, false);
+  nodeHandle_.param("image_view/enable_console_output", enableConsoleOutput_, true);
 
   // Check if Xserver is running on Linux.
-  if (XOpenDisplay(NULL)) {
+  if (XOpenDisplay(NULL)) { // XOpenDisplay(jetson:0)
     // Do nothing!
     ROS_INFO("[YoloObjectDetector] Xserver is running.");
   } else {
     ROS_INFO("[YoloObjectDetector] Xserver is not running.");
-    viewImage_ = false;
+    displayDetectedImage_ = false; // Variable name changed from viewImage_
   }
 
   // Set vector sizes.
@@ -258,8 +258,8 @@ bool YoloObjectDetector::isCheckingForObjects() const
 
 bool YoloObjectDetector::publishDetectionImage(const cv::Mat& detectionImage)
 {
-  if (detectionImagePublisher_.getNumSubscribers() < 1)
-    return false;
+  // if (detectionImagePublisher_.getNumSubscribers() < 1)
+  //   return false;
   cv_bridge::CvImage cvImage;
   cvImage.header.stamp = ros::Time::now();
   cvImage.header.frame_id = "detection_image";
@@ -421,7 +421,10 @@ void *YoloObjectDetector::fetchInThread()
 
 void *YoloObjectDetector::displayInThread(void *ptr)
 {
-  show_image_cv(buff_[(buffIndex_ + 1)%3], "YOLO V3", ipl_);
+  // This function will now ALWAYS publish the detected image, but will only display in
+  // an OpenCV window if displayDetectedImage_ is true
+  // Need to update show_image_cv() in darknet_ros/darknet/src/image.c
+  show_image_cv(buff_[(buffIndex_ + 1)%3], "YOLO V3", ipl_, displayDetectedImage_);
   int c = cvWaitKey(waitKeyDelay_);
   if (c != -1) c = c%256;
   if (c == 27) {
@@ -502,22 +505,18 @@ void YoloObjectDetector::yolo()
   layer l = net_->layers[net_->n - 1];
   roiBoxes_ = (darknet_ros::RosBox_ *) calloc(l.w * l.h * l.n, sizeof(darknet_ros::RosBox_));
 
-  IplImageWithHeader_ imageAndHeader = getIplImageWithHeader();
-  IplImage* ROS_img = imageAndHeader.image;
+  IplImage* ROS_img = getIplImage();
   buff_[0] = ipl_to_image(ROS_img);
   buff_[1] = copy_image(buff_[0]);
   buff_[2] = copy_image(buff_[0]);
-  headerBuff_[0] = imageAndHeader.header;
-  headerBuff_[1] = headerBuff_[0];
-  headerBuff_[2] = headerBuff_[0];
   buffLetter_[0] = letterbox_image(buff_[0], net_->w, net_->h);
   buffLetter_[1] = letterbox_image(buff_[0], net_->w, net_->h);
   buffLetter_[2] = letterbox_image(buff_[0], net_->w, net_->h);
-  ipl_ = cvCreateImage(cvSize(buff_[0].w, buff_[0].h), IPL_DEPTH_8U, buff_[0].c);
+  ipl_ = cvCreateImage(cvSize(buff_[0].w, buff_[0].h), IPL_DEPTH_8U, buff_[0].c); // Initializes image
 
   int count = 0;
 
-  if (!demoPrefix_ && viewImage_) {
+  if (!demoPrefix_ && displayDetectedImage_) { // Use displayDetectedImage_
     cvNamedWindow("YOLO V3", CV_WINDOW_NORMAL);
     if (fullScreen_) {
       cvSetWindowProperty("YOLO V3", CV_WND_PROP_FULLSCREEN, CV_WINDOW_FULLSCREEN);
@@ -529,6 +528,7 @@ void YoloObjectDetector::yolo()
 
   demoTime_ = what_time_is_it_now();
 
+  // REVISED while-loop
   while (!demoDone_) {
     buffIndex_ = (buffIndex_ + 1) % 3;
     fetch_thread = std::thread(&YoloObjectDetector::fetchInThread, this);
@@ -536,9 +536,7 @@ void YoloObjectDetector::yolo()
     if (!demoPrefix_) {
       fps_ = 1./(what_time_is_it_now() - demoTime_);
       demoTime_ = what_time_is_it_now();
-      if (viewImage_) {
-        displayInThread(0);
-      }
+      displayInThread(0); // ALWAYS run this function (previously inside if-loop)
       publishInThread();
     } else {
       char name[256];
@@ -642,6 +640,47 @@ void *YoloObjectDetector::publishInThread()
   }
 
   return 0;
+}
+
+void YoloObjectDetector::show_image_cv(image p, const char *name, IplImage *disp, bool displayDetectedImage)
+{
+    int x,y,k;
+    if(p.c == 3) rgbgr_image(p);
+    //normalize_image(copy);
+
+    char buff[256];
+    //sprintf(buff, "%s (%d)", name, windows);
+    sprintf(buff, "%s", name);
+
+    int step = disp->widthStep;
+
+    // Commented out b/c YoloObjectDetector takes care of the OpenCV window
+    //cvNamedWindow(buff, CV_WINDOW_NORMAL);
+    //cvMoveWindow(buff, 100*(windows%10) + 200*(windows/10), 100*(windows%10));
+
+    ++windows;
+    for(y = 0; y < p.h; ++y){
+        for(x = 0; x < p.w; ++x){
+            for(k= 0; k < p.c; ++k){
+                disp->imageData[y*step + x*p.c + k] = (unsigned char)(get_pixel(p,x,y,k)*255);
+            }
+        }
+    }
+    if(0){
+        int w = 448;
+        int h = w*p.h/p.w;
+        if(h > 1000){
+            h = 1000;
+            w = h*p.w/p.h;
+        }
+        IplImage *buffer = disp;
+        disp = cvCreateImage(cvSize(w, h), buffer->depth, buffer->nChannels);
+        cvResize(buffer, disp, CV_INTER_LINEAR);
+        cvReleaseImage(&buffer);
+    }
+    if(displayDetectedImage) {
+      cvShowImage(buff, disp);
+    }
 }
 
 

@@ -59,7 +59,7 @@ extern "C" {
 
 extern "C" void ipl_into_image(IplImage* src, image im);
 extern "C" image ipl_to_image(IplImage* src);
-extern "C" void show_image_cv(image p, const char *name, IplImage *disp);
+// extern "C" void show_image_cv(image p, const char *name, IplImage *disp);
 
 namespace darknet_ros {
 
@@ -195,7 +195,7 @@ class YoloObjectDetector
   double demoTime_;
 
   RosBox_ *roiBoxes_;
-  bool viewImage_;
+  bool displayDetectedImage_;
   bool enableConsoleOutput_;
   int waitKeyDelay_;
   int fullScreen_;
@@ -246,6 +246,8 @@ class YoloObjectDetector
   bool isNodeRunning(void);
 
   void *publishInThread();
+
+  void show_image_cv(image p, const char *name, IplImage *disp, bool displayDetectedImage);
 };
 
 } /* namespace darknet_ros*/
