@@ -553,13 +553,20 @@ void YoloObjectDetector::yolo()
 
 }
 
-IplImageWithHeader_ YoloObjectDetector::getIplImageWithHeader()
+IplImage* YoloObjectDetector::getIplImage()
 {
   boost::shared_lock<boost::shared_mutex> lock(mutexImageCallback_);
   IplImage* ROS_img = new IplImage(camImageCopy_);
-  IplImageWithHeader_ header = {.image = ROS_img, .header = imageHeader_};
-  return header;
+  return ROS_img;
 }
+
+// IplImageWithHeader_ YoloObjectDetector::getIplImageWithHeader()
+// {
+//   boost::shared_lock<boost::shared_mutex> lock(mutexImageCallback_);
+//   IplImage* ROS_img = new IplImage(camImageCopy_);
+//   IplImageWithHeader_ header = {.image = ROS_img, .header = imageHeader_};
+//   return header;
+// }
 
 bool YoloObjectDetector::getImageStatus(void)
 {

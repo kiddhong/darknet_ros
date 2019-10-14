@@ -238,8 +238,9 @@ class YoloObjectDetector
                     int frames, int fullscreen);
 
   void yolo();
-
-  IplImageWithHeader_ getIplImageWithHeader();
+  
+  IplImage* getIplImage();
+  // IplImageWithHeader_ getIplImageWithHeader();
 
   bool getImageStatus(void);
 
