@@ -406,10 +406,8 @@ void *YoloObjectDetector::detectInThread()
 
 void *YoloObjectDetector::fetchInThread()
 {
-  IplImageWithHeader_ imageAndHeader = getIplImageWithHeader();
-  IplImage* ROS_img = imageAndHeader.image;
+  IplImage* ROS_img = getIplImage();
   ipl_into_image(ROS_img, buff_[buffIndex_]);
-  headerBuff_[buffIndex_] = imageAndHeader.header;
   {
     boost::shared_lock<boost::shared_mutex> lock(mutexImageCallback_);
     buffId_[buffIndex_] = actionId_;
