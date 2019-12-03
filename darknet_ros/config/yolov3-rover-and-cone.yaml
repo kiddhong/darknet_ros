@@ -3,7 +3,7 @@ yolo_model:
   config_file:
     name: yolov3-rover-and-cone-vis.cfg
   weight_file:
-    name: yolov3-rover-and-cone-416_39000.weights
+    name: yolov3-rover-and-cone-416_last.weights
   threshold:
     value: 0.5
   detection_classes:
