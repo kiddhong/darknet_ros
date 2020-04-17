@@ -3,7 +3,7 @@ yolo_model:
   config_file:
     name: yolov3-mapper.cfg
   weight_file:
-    name: yolov3-rover-416-ugv_617000.weights
+    name: yolov3-rover-416-ugv_768000.weights
   threshold:
     value: 0.5
   detection_classes:
