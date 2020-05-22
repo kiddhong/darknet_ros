@@ -3,7 +3,7 @@ yolo_model:
   config_file:
     name: yolov3-mapper.cfg
   weight_file:
-    name: BEV-summer-179900.weights #yolov3-rover-416-ugv_768000.weights
+    name: BEV-summer-179900.weights
   threshold:
     value: 0.5
   detection_classes:
